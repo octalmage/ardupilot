@@ -121,6 +121,12 @@ Mode *Copter::mode_from_mode_num(const Mode::Number mode)
             break;
 #endif
 
+#if MODE_TURTLE_ENABLED == ENABLED
+        case Mode::Number::TURTLE:
+            ret = &mode_throw;
+            break;
+#endif
+
 #if HAL_ADSB_ENABLED
         case Mode::Number::AVOID_ADSB:
             ret = &mode_avoid_adsb;
