@@ -11,6 +11,11 @@
 // turtle_init - initialise turtle controller
 bool ModeTurtle::init(bool ignore_checks)
 {   
+     // Check that interlock is disengaged
+    if (motors->get_interlock()) {
+        gcs().send_text(MAV_SEVERITY_INFO, "Turtle Mode Change Fail: Interlock Engaged");
+        return false;
+    }
 
     #if FRAME_CONFIG == HELI_FRAME
         // do not allow helis to use turtle mode
@@ -21,8 +26,17 @@ bool ModeTurtle::init(bool ignore_checks)
     copter.air_mode = AirMode::AIRMODE_DISABLED;
 
 
+    //Check to see if we are using DHOT 
+    if (motors->get_pwm_type() != AP_Motors::PWM_TYPE_DSHOT150 &&
+        motors->get_pwm_type() != AP_Motors::PWM_TYPE_DSHOT300 &&
+        motors->get_pwm_type() != AP_Motors::PWM_TYPE_DSHOT600 &&
+        motors->get_pwm_type() != AP_Motors::PWM_TYPE_DSHOT1200 ) {
+        // NO TURTLE TURTLE
+        return false;
+    }
+
     // set target to current position
-    // TODO: Run dshot command to reverse motors? 
+    // TODO: Run dshot command to reverse motors.
 
     // DSHOT command 20 will set the motor direction to normal, and 21 will reverse.
     return true;
@@ -32,6 +46,31 @@ bool ModeTurtle::init(bool ignore_checks)
 void ModeTurtle::run()
 {
    // TODO: Check stick position and move the corresponding motor.
+
+    if (!motors->armed()) {
+        // Motors should be Stopped
+        motors->set_desired_spool_state(AP_Motors::DesiredSpoolState::SHUT_DOWN);
+    } else {
+        motors->set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
+    }   
+
+    
+
+    switch (motors->get_spool_state()) {
+
+    case AP_Motors::SpoolState::THROTTLE_UNLIMITED:
+        // TODO: If we can disable motors 3-4, this should allow control over that single motor.
+        // motors->set_throttle(get_pilot_desired_throttle());
+        break;
+
+    case AP_Motors::SpoolState::SPOOLING_UP:
+    case AP_Motors::SpoolState::SPOOLING_DOWN:
+    case AP_Motors::SpoolState::SHUT_DOWN:
+    case AP_Motors::SpoolState::GROUND_IDLE:
+        break;
+    }
+
+    
 }
 
 void ModeTurtle::exit()
