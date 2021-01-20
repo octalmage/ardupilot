@@ -220,6 +220,7 @@ public:
     friend class ModeStabilize_Heli;
     friend class ModeSystemId;
     friend class ModeThrow;
+    friend class ModeTurtle;
     friend class ModeZigZag;
     friend class ModeAutorotate;
 
@@ -952,6 +953,9 @@ private:
 #endif
 #if MODE_THROW_ENABLED == ENABLED
     ModeThrow mode_throw;
+#endif
+#if MODE_TURTLE_ENABLED == ENABLED
+    ModeTurtle mode_turtle;
 #endif
 #if MODE_GUIDED_NOGPS_ENABLED == ENABLED
     ModeGuidedNoGPS mode_guided_nogps;
