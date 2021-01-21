@@ -83,6 +83,9 @@ public:
     // get minimum or maximum pwm value that can be output to motors
     int16_t             get_pwm_output_min() const;
     int16_t             get_pwm_output_max() const;
+
+    // convert actuator output (0~1) range to pwm range
+    int16_t             output_to_pwm(float _actuator_output);
     
     // parameter check for MOT_PWM_MIN/MAX, returns true if parameters are valid
     bool check_mot_pwm_params() const;
@@ -125,9 +128,6 @@ protected:
 
     // return gain scheduling gain based on voltage and air density
     float               get_compensation_gain() const;
-
-    // convert actuator output (0~1) range to pwm range
-    int16_t             output_to_pwm(float _actuator_output);
 
     // adds slew rate limiting to actuator output if MOT_SLEW_TIME > 0 and not shutdown
     void                set_actuator_with_slew(float& actuator_output, float input);

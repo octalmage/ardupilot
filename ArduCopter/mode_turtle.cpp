@@ -11,6 +11,12 @@
 // turtle_init - initialise turtle controller
 bool ModeTurtle::init(bool ignore_checks)
 {   
+    // do not enter the mode when already armed or when flying
+    if (motors->armed()) {
+         gcs().send_text(MAV_SEVERITY_INFO, "Turtle Mode Change Fail: Turtles cannot fly!!!");
+        return false;
+    }
+
      // Check that interlock is disengaged
     if (motors->get_interlock()) {
         gcs().send_text(MAV_SEVERITY_INFO, "Turtle Mode Change Fail: Interlock Engaged");
@@ -25,18 +31,24 @@ bool ModeTurtle::init(bool ignore_checks)
     // we don't want the motors enabled while upside down.
     copter.air_mode = AirMode::AIRMODE_DISABLED;
 
-
     //Check to see if we are using DHOT 
     if (motors->get_pwm_type() != AP_Motors::PWM_TYPE_DSHOT150 &&
         motors->get_pwm_type() != AP_Motors::PWM_TYPE_DSHOT300 &&
         motors->get_pwm_type() != AP_Motors::PWM_TYPE_DSHOT600 &&
         motors->get_pwm_type() != AP_Motors::PWM_TYPE_DSHOT1200 ) {
-        // NO TURTLE TURTLE
+        gcs().send_text(MAV_SEVERITY_INFO, "Turtle Mode Change Fail: Not using DSHOT");
         return false;
     }
 
-    // set target to current position
-    // TODO: Run dshot command to reverse motors.
+    int repeat_counter;
+
+    for (repeat_counter = 1; repeat_counter <= 10; repeat_counter++) {
+        motors->output_test_seq(1, 21);
+    }
+
+    // Save request.
+    motors->output_test_seq(1, 12);
+
 
     // DSHOT command 20 will set the motor direction to normal, and 21 will reverse.
     return true;
@@ -50,22 +62,19 @@ void ModeTurtle::run()
     if (!motors->armed()) {
         // Motors should be Stopped
         motors->set_desired_spool_state(AP_Motors::DesiredSpoolState::SHUT_DOWN);
-    } else {
-        motors->set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
-    }   
-
-    
+    } 
 
     switch (motors->get_spool_state()) {
 
-    case AP_Motors::SpoolState::THROTTLE_UNLIMITED:
-        // TODO: If we can disable motors 3-4, this should allow control over that single motor.
-        // motors->set_throttle(get_pilot_desired_throttle());
+    case AP_Motors::SpoolState::SHUT_DOWN:
+
+        // TODO: Check stick position to determine throttle amount. 
+        motors->output_test_seq(1, motors->output_to_pwm(get_pilot_desired_throttle()));
         break;
 
+    case AP_Motors::SpoolState::THROTTLE_UNLIMITED:
     case AP_Motors::SpoolState::SPOOLING_UP:
     case AP_Motors::SpoolState::SPOOLING_DOWN:
-    case AP_Motors::SpoolState::SHUT_DOWN:
     case AP_Motors::SpoolState::GROUND_IDLE:
         break;
     }
@@ -75,12 +84,18 @@ void ModeTurtle::run()
 
 void ModeTurtle::exit()
 {
-    // TODO: Set airmode to it's previous state.
-    //  if (g2.acro_options.get() & uint8_t(AcroOptions::AIR_MODE)) {
-    //     copter.air_mode = AirMode::AIRMODE_ENABLED;
-    // }
+    // Set airmode to it's previous state.
+    if (g2.acro_options.get() & uint8_t(ModeAcro::AcroOptions::AIR_MODE)) {
+        copter.air_mode = AirMode::AIRMODE_ENABLED;
+    }
 
-    // TODO: Use DSHOT commant to set motor direction to normal.
+    int repeat_counter;
+    for (repeat_counter = 1; repeat_counter <= 10; repeat_counter++) {
+        motors->output_test_seq(1, 20);
+    }
+
+    // Save request.
+    motors->output_test_seq(1, 12);
 }
 
 #endif

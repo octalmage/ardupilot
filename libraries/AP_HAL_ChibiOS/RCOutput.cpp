@@ -1157,12 +1157,18 @@ void RCOutput::dshot_send(pwm_group &group, bool blocking)
                     value = 0;
                 }
             }
-            if (value != 0) {
+            if (value != 0 && value != 12 && value != 20 && value != 21) {
                 // dshot values are from 48 to 2047. Zero means off.
                 value += 47;
             }
 
             bool request_telemetry = (telem_request_mask & chan_mask)?true:false;
+
+            // We need to set request_telemetry to true when sending dshot commands.
+            if (value > 0 && value < 48) {
+                request_telemetry = true;
+            }
+
             uint16_t packet = create_dshot_packet(value, request_telemetry, _bdshot.mask);
             if (request_telemetry) {
                 telem_request_mask &= ~chan_mask;

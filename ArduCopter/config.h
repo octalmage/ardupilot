@@ -344,7 +344,7 @@
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
-// Throw - fly vehicle after throwing it in the air
+// Turtle - flip vehicle to upright position after a crash
 #ifndef MODE_TURTLE_ENABLED
 # define MODE_TURTLE_ENABLED ENABLED
 #endif

@@ -123,7 +123,7 @@ Mode *Copter::mode_from_mode_num(const Mode::Number mode)
 
 #if MODE_TURTLE_ENABLED == ENABLED
         case Mode::Number::TURTLE:
-            ret = &mode_throw;
+            ret = &mode_turtle;
             break;
 #endif
 
