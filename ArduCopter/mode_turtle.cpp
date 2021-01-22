@@ -62,17 +62,19 @@ void ModeTurtle::run()
     if (!motors->armed()) {
         // Motors should be Stopped
         motors->set_desired_spool_state(AP_Motors::DesiredSpoolState::SHUT_DOWN);
-    } 
+    } else {
+        motors->set_desired_spool_state(AP_Motors::DesiredSpoolState::THROTTLE_UNLIMITED);
+    }   
 
     switch (motors->get_spool_state()) {
 
-    case AP_Motors::SpoolState::SHUT_DOWN:
+    case AP_Motors::SpoolState::THROTTLE_UNLIMITED:
 
         // TODO: Check stick position to determine throttle amount. 
         motors->output_test_seq(1, motors->output_to_pwm(get_pilot_desired_throttle()));
         break;
 
-    case AP_Motors::SpoolState::THROTTLE_UNLIMITED:
+    case AP_Motors::SpoolState::SHUT_DOWN:
     case AP_Motors::SpoolState::SPOOLING_UP:
     case AP_Motors::SpoolState::SPOOLING_DOWN:
     case AP_Motors::SpoolState::GROUND_IDLE:
